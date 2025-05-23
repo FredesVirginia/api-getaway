@@ -3,10 +3,10 @@ import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservice
 
 @Injectable()
 export class UsersService implements OnModuleInit{
-    private client : ClientProxy;
+    private clientUser : ClientProxy;
 
     onModuleInit() {
-        this.client = ClientProxyFactory.create({
+        this.clientUser = ClientProxyFactory.create({
             transport : Transport.TCP , 
             options : {
                 host : "localhost",
@@ -16,6 +16,6 @@ export class UsersService implements OnModuleInit{
     }
 
     async createUser( data : any){
-        return this.client.send('create-user' , data).toPromise()
+        return this.clientUser.send('create-user' , data).toPromise()
     }
 }
