@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { CreateProductDto } from './dtos/Product-created.dto';
+import { CreateCategoryDto } from './dtos/Category-created.dto';
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
@@ -19,6 +20,10 @@ export class ProductsService implements OnModuleInit {
 
     async createProduct( data : CreateProductDto){
         return this.clientProduct.send('create-product' , data).toPromise()
+    }
+
+    async createCategory( data : CreateCategoryDto ){
+        return this.clientProduct.send('create-category' , data).toPromise()
     }
 
      async getAllProduct() {

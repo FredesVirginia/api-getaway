@@ -17,6 +17,10 @@ export class CreateProductDto {
   @IsNumber()
   @IsNotEmpty()
   stock: number;
+  
+   @IsString()
+  @IsNotEmpty()
+  category: string;
 }
 
 export class SearTodoListByKeyword {

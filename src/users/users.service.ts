@@ -18,4 +18,8 @@ export class UsersService implements OnModuleInit{
     async createUser( data : any){
         return this.clientUser.send('create-user' , data).toPromise()
     }
+
+    async getAllUser(){
+        return this.clientUser.send('get-all-u<ser', {})
+    }
 }

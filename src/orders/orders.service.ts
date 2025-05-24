@@ -18,4 +18,8 @@ export class OrdersService implements OnModuleInit {
      async createOrder(orderDto : OrderDto){
         return this.clientOrder.send('create-order', orderDto)
      }
+
+     async getAllOrdersByUser(id : string){
+        return this.clientOrder.send('order-by-user', id)
+     }
 }
