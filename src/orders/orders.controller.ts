@@ -13,6 +13,8 @@ export class OrdersController {
 
      @Get('by/user/:userId')
       getAllOrderUser(@Param('userId') userId : string){
-        return this.orderService.getAllOrdersByUser(userId)
+        return this.orderService.getProductReconmedations(userId)
       }
+
+
 }
