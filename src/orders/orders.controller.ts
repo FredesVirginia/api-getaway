@@ -16,5 +16,10 @@ export class OrdersController {
         return this.orderService.getProductReconmedations(userId)
       }
 
+     @Get('by/user/total/:userId')
+      getAllOrderTotalUser(@Param('userId') userId : string){
+        return this.orderService.getAllOrderTotalUser(userId)
+      }
+
 
 }

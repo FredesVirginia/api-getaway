@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
 import { OrderDto } from './dtos/Order-created.dto';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -30,6 +31,17 @@ export class OrdersService implements OnModuleInit {
      async getAllOrdersByUser(id : string){
         return this.clientOrder.send('order-by-user', id)
      }
+
+  async getAllOrderTotalUser(id: string) {
+  try {
+    const result = await lastValueFrom(this.clientOrder.send('order-total-user', id));
+    return result;
+  } catch (error) {
+    // Aquí puedes manejar o lanzar el error con más información
+    console.error('Error al obtener total de órdenes:', error);
+    throw new RpcException('Error al obtener total de órdenes');
+  }
+}
 
 
    //   async getProductReconmedations( userId : string){
@@ -78,54 +90,54 @@ export class OrdersService implements OnModuleInit {
    //    }
 
       async getProductReconmedations(userId: string) {
-  // 1. Obtenemos productos comprados
-  const purchasedProductsResponse = await this.clientOrder
-    .send('get-purchased-products', userId)
-    .toPromise();
+        // 1. Obtenemos productos comprados
+        const purchasedProductsResponse = await this.clientOrder
+          .send('get-purchased-products', userId)
+          .toPromise();
 
-  // Validar estructura
-  const purchasedProducts = Array.isArray(purchasedProductsResponse?.data)
-    ? purchasedProductsResponse.data
-    : [];
+        // Validar estructura
+        const purchasedProducts = Array.isArray(purchasedProductsResponse?.data)
+          ? purchasedProductsResponse.data
+          : ["primero"];
 
-  if (!purchasedProducts.length) {
-    return []; // El usuario no ha comprado nada
-  }
+        if (!purchasedProducts.length) {
+          return ["segundo"]; // El usuario no ha comprado nada
+        }
 
-  // 2. Extraer los productIds
-  const productIds = purchasedProducts.map(p => p.productId);
+        // 2. Extraer los productIds
+        const productIds = purchasedProducts.map(p => p.productId);
 
-  // 3. Traer detalles de esos productos
-  const products = await this.clientProduct
-    .send('get-products-by-ids', productIds)
-    .toPromise();
+        // 3. Traer detalles de esos productos
+        const products = await this.clientProduct
+          .send('get-products-by-ids', productIds)
+          .toPromise();
 
-  // 4. Contar por categoría
-  const categoryCounter: Record<string, number> = {};
+        // 4. Contar por categoría
+        const categoryCounter: Record<string, number> = {};
 
-  for (const p of products) {
-    const match = purchasedProducts.find(pp => pp.productId === p.id);
-    const qty = match ? +match.total : 0;
-    categoryCounter[p.category.name] = (categoryCounter[p.category.name] || 0) + qty;
-  }
+        for (const p of products) {
+          const match = purchasedProducts.find(pp => pp.productId === p.id);
+          const qty = match ? +match.total : 0;
+          categoryCounter[p.category.name] = (categoryCounter[p.category.name] || 0) + qty;
+        }
 
-  // 5. Obtener categoría más comprada
-  const [topCategory] = Object.entries(categoryCounter)
-    .sort((a, b) => b[1] - a[1])[0] || [];
+        // 5. Obtener categoría más comprada
+        const [topCategory] = Object.entries(categoryCounter)
+          .sort((a, b) => b[1] - a[1])[0] || [];
 
-  if (!topCategory) {
-    return []; // No se encontró categoría dominante
-  }
+        if (!topCategory) {
+          return ["tercero"]; // No se encontró categoría dominante
+        }
 
-  // 6. Obtener todos los productos de esa categoría
-  const allInCategory = await this.clientProduct
-    .send('get-products-by-category', topCategory)
-    .toPromise();
+        // 6. Obtener todos los productos de esa categoría
+        const allInCategory = await this.clientProduct
+          .send('get-products-by-category', topCategory)
+          .toPromise();
 
-  // 7. Filtrar los ya comprados
-  const recommendations = allInCategory.filter(p => !productIds.includes(p.id));
+        // 7. Filtrar los ya comprados
+        const recommendations = allInCategory.filter(p => !productIds.includes(p.id));
 
-  return recommendations;
+        return recommendations;
 }
 
 }
