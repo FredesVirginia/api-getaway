@@ -38,6 +38,8 @@ export class OrdersService implements OnModuleInit {
     return this.clientOrder.send('order-by-user', id);
   }
 
+
+
   async getAllOrderTotalUser(id: string) {
     try {
       const result = await lastValueFrom(
@@ -75,46 +77,9 @@ export class OrdersService implements OnModuleInit {
     }
   }
 
-  //   async getProductReconmedations( userId : string){
-  //       //1 obtenemos produtos comprados
-  //       const purchasedProducts = await this.clientOrder.send(
-  //          'get-purchased-products' , userId
-  //       ).toPromise();
-
-  //       const productIds = purchasedProducts.map(p => p.productId)
-
-  //       //2 detales de esos productos
-  //       const products = await this.clientProduct.send(
-  //          'get-products-by-ids' , productIds
-  //       ).toPromise()
-
-  //       //3 conteo por categoria
-
-  //       const categoryCounter : Record<string , number> = {}
-  //       for(const p of products){
-  //          const qty = +purchasedProducts.find(pp => pp.productId === p.id).total;
-  //          categoryCounter[p.category.name] = (categoryCounter[p.category.name] || 0) + qty
-  //       }
-
-  //       const [topCategory] = Object.entries(categoryCounter).sort((a, b) => b[1] - a[1])[0] || [];
-
-  //       if(!topCategory) return [] //el usuario no compro nada
-
-  //       //5 tofdos los produto de esa categoria
-
-  //       const allInCategory = await this.clientProduct.send(
-  //          'get-products-by-category' , topCategory
-  //       ).toPromise()
-
-  //       //6 filtrar los ya comprados
-
-  //       const reconmmendations = allInCategory.filter(
-  //          p => !productIds.includes(p.id)
-  //       )
-
-  //       return reconmmendations
-
-  //    }
+  async getHistoryUser( id : string ){
+    return this.clientOrder.send('history-order' , id)
+  }
 
   async getProductReconmedations(userId: string) {
     // 1. Obtenemos productos comprados

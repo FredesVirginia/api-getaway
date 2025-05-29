@@ -21,5 +21,11 @@ export class OrdersController {
         return this.orderService.getAllOrderTotalUser(userId)
       }
 
+    @Get('history/:userId')
+    getHistoryUser(@Param('userId') userId : string){
+      return this.orderService.getHistoryUser(userId)
+    }
+
+
 
 }
