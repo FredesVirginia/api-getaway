@@ -44,28 +44,30 @@ export class OrdersService implements OnModuleInit {
         this.clientOrder.send('order-total-user', id),
       );
 
+     
       const productMasComprado: string[] = [];
       productMasComprado.push(result.productoMasComprado);
 
       const categoryProductMas = await lastValueFrom(
-        this.clientProduct.send('get-products-by-ids-and-category-id', productMasComprado),
+        this.clientProduct.send(
+          'get-products-by-ids-and-category-id',
+          productMasComprado,
+        ),
       );
 
-      console.log("CATEGORU" , categoryProductMas)
-
       const data: ProductReconmedationDto = {
-        productosComprados: productMasComprado,
+        productosComprados: result.productos,
         categoriaDeProductoComprado: categoryProductMas,
       };
 
-      console.log("DATAAAAAAAAAAAAAAAAAAAA 1" , data)
       const finalReconmendation = await lastValueFrom(
         this.clientProduct.send('get-product-recomendados', data),
       );
 
-      console.log('DATAAAAAAAAAAA', finalReconmendation);
-
-      return result;
+      return {
+        data: result,
+        productosReconmendados: finalReconmendation,
+      };
     } catch (error) {
       // Aquí puedes manejar o lanzar el error con más información
       console.error('Error al obtener total de órdenes:', error);
