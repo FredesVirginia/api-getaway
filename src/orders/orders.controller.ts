@@ -21,6 +21,11 @@ export class OrdersController {
         return this.orderService.getAllOrderTotalUser(userId)
       }
 
+      @Get('product-average-for-mouth/:userId')
+       getAllProductByUserForMouth(@Param('userId') userId : string){
+           return this.orderService.getAllPoductByUserForMouthAverage(userId)
+       }
+
     @Get('history/:userId')
     getHistoryUser(@Param('userId') userId : string){
       return this.orderService.getHistoryUser(userId)

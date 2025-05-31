@@ -77,6 +77,13 @@ export class OrdersService implements OnModuleInit {
     }
   }
 
+  async getAllPoductByUserForMouthAverage(id: string){
+     const result = await lastValueFrom(
+        this.clientOrder.send('product-average-mouth-by-user', id),
+      );
+      return result
+  }
+
   async getHistoryUser( id : string ){
     return this.clientOrder.send('history-order' , id)
   }
