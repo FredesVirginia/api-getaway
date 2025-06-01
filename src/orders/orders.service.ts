@@ -84,6 +84,21 @@ export class OrdersService implements OnModuleInit {
       return result
   }
 
+
+  async getUserMonth200(id : string){
+    const result = await lastValueFrom(
+      this.clientOrder.send('user-200-mouth', id)
+    )
+    return result
+  }
+
+  async getMouthUserMuch200 (mes : string){
+    const result = await lastValueFrom(
+      this.clientOrder.send('mouth-user-200' , mes)
+    )
+    return result
+  }
+
   async getHistoryUser( id : string ){
     return this.clientOrder.send('history-order' , id)
   }
