@@ -99,6 +99,13 @@ export class OrdersService implements OnModuleInit {
     return result
   }
 
+  async getProductMouthBestSeller(){
+    const result = await lastValueFrom(
+      this.clientOrder.send('product-best-seller-for-mouth' , {})
+    )
+    return result
+  }
+
   async getHistoryUser( id : string ){
     return this.clientOrder.send('history-order' , id)
   }

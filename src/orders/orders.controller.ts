@@ -36,6 +36,11 @@ export class OrdersController {
     return this.orderService.getMouthUserMuch200(mes);
   }
 
+  @Get('best-seller-mouth')
+  getProductsMouthBestSeller(){
+    return this.orderService.getProductMouthBestSeller()
+  }
+
   @Get('history/:userId')
   getHistoryUser(@Param('userId') userId: string) {
     return this.orderService.getHistoryUser(userId);
