@@ -1,5 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { AuthDto } from './dtos/auth.dto';
+import { LoginAuthDto } from './dtos/login.auth.dto';
 
 @Injectable()
 export class UsersService implements OnModuleInit{
@@ -15,9 +17,15 @@ export class UsersService implements OnModuleInit{
         })
     }
 
-    async createUser( data : any){
-        return this.clientUser.send('create-user' , data).toPromise()
+    async registerUser( data : AuthDto){
+        return this.clientUser.send('auth_register' , data).toPromise()
     }
+
+    async loginUser( data : LoginAuthDto){
+        return this.clientUser.send('auth_login' , data).toPromise()
+    }
+
+    
 
     async getAllUser(){
         return this.clientUser.send('get-all-u<ser', {})
