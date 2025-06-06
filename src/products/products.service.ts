@@ -34,9 +34,20 @@ export class ProductsService implements OnModuleInit {
         return this.clientProduct.send('create-category' , data).toPromise()
     }
 
-     async getAllProduct() {
-        return lastValueFrom(this.clientProduct.send('show-all-product', {}));
-    }
+   async getAllProduct(
+  category?: string,
+  minPrice?: number,
+  maxPrice?: number,
+  search?: string,
+) {
+  return lastValueFrom(this.clientProduct.send('show-all-product', {
+    category,
+    minPrice,
+    maxPrice,
+    search,
+  }));
+}
+
 
 
 }

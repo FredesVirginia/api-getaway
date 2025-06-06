@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,11 +22,15 @@ import { Payload } from '@nestjs/microservices';
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Post()
   create(@Body() data: CreateProductDto) {
     return this.productService.createProduct(data);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Post('category')
   createCategory(@Body() data: CreateCategoryDto) {
     return this.productService.createCategory(data);
@@ -33,11 +38,14 @@ export class ProductsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('USER')
-  get() {
-    return this.productService.getAllProduct();
+  @Roles('ADMIN')
+  get(  @Query('category') category?: string,
+  @Query('minPrice') minPrice?: number,
+  @Query('maxPrice') maxPrice?: number,
+  @Query('search') search?: string,) {
+    return this.productService.getAllProduct( category, minPrice, maxPrice, search );
   }
-
+ 
   @Patch('update-product/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -51,9 +59,9 @@ export class ProductsController {
   @Delete('delete-product/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  async deleteProduct(@Param('id') id: string,) {
+  async deleteProduct(@Param('id') id: string) {
     console.log('ID recibido:', id);
-   
+
     const productUpdate = await this.productService.deleteProduct(id);
     return productUpdate;
   }
