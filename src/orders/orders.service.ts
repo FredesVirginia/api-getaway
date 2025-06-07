@@ -8,6 +8,7 @@ import {
 import { OrderDto } from './dtos/Order-created.dto';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { ProductReconmedationDto } from 'src/products/dtos/ProductReconmedation.dto';
+import { ProductDtoForDecreaseQuantity } from 'src/products/dtos/ProductDto.dto';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -31,7 +32,22 @@ export class OrdersService implements OnModuleInit {
   }
 
   async createOrder(orderDto: OrderDto) {
-    return this.clientOrder.send('create-order', orderDto);
+
+    const dataResult = await lastValueFrom(  this.clientOrder.send('create-order', orderDto) )
+   
+    const data = dataResult.items.map((q)=> {
+      return {
+        productId : q.productId,
+        quantity : q.quantity
+      }
+    })
+   const dataSend: ProductDtoForDecreaseQuantity = { products: data };
+console.log("dataaaaaaaaa", dataSend);
+
+     
+    const dataResult2 = await lastValueFrom(this.clientProduct.send('decrement-stock-product' , dataSend))
+    console.log(dataResult2)
+    return dataResult
   }
 
   async getAllOrdersByUser(id: string) {
