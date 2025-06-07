@@ -1,6 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrderDto } from './dtos/Order-created.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('orders')
 export class OrdersController {
@@ -14,6 +17,14 @@ export class OrdersController {
   @Get('by/user/:userId')
   getAllOrderUser(@Param('userId') userId: string) {
     return this.orderService.getProductReconmedations(userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Post('add-to-cart')
+  addToCart(@Req() req) {
+      const user = req.user; 
+    return this.orderService.addToCart(user);
   }
 
   @Get('by/user/total/:userId')
@@ -37,8 +48,8 @@ export class OrdersController {
   }
 
   @Get('best-seller-mouth')
-  getProductsMouthBestSeller(){
-    return this.orderService.getProductMouthBestSeller()
+  getProductsMouthBestSeller() {
+    return this.orderService.getProductMouthBestSeller();
   }
 
   @Get('history/:userId')

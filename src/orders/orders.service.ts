@@ -32,22 +32,24 @@ export class OrdersService implements OnModuleInit {
   }
 
   async createOrder(orderDto: OrderDto) {
+    const dataResult = await lastValueFrom(
+      this.clientOrder.send('create-order', orderDto),
+    );
 
-    const dataResult = await lastValueFrom(  this.clientOrder.send('create-order', orderDto) )
-   
-    const data = dataResult.items.map((q)=> {
+    const data = dataResult.items.map((q) => {
       return {
-        productId : q.productId,
-        quantity : q.quantity
-      }
-    })
-   const dataSend: ProductDtoForDecreaseQuantity = { products: data };
-console.log("dataaaaaaaaa", dataSend);
+        productId: q.productId,
+        quantity: q.quantity,
+      };
+    });
+    const dataSend: ProductDtoForDecreaseQuantity = { products: data };
+    console.log('dataaaaaaaaa', dataSend);
 
-     
-    const dataResult2 = await lastValueFrom(this.clientProduct.send('decrement-stock-product' , dataSend))
-    console.log(dataResult2)
-    return dataResult
+    const dataResult2 = await lastValueFrom(
+      this.clientProduct.send('decrement-stock-product', dataSend),
+    );
+    console.log(dataResult2);
+    return dataResult;
   }
 
   async getAllOrdersByUser(id: string) {
@@ -55,6 +57,9 @@ console.log("dataaaaaaaaa", dataSend);
   }
 
 
+  async addToCart(user : any){
+    return this.clientOrder.send('add-cart' , {user})
+  }
 
   async getAllOrderTotalUser(id: string) {
     try {
@@ -62,7 +67,6 @@ console.log("dataaaaaaaaa", dataSend);
         this.clientOrder.send('order-total-user', id),
       );
 
-     
       const productMasComprado: string[] = [];
       productMasComprado.push(result.productoMasComprado);
 
@@ -93,37 +97,36 @@ console.log("dataaaaaaaaa", dataSend);
     }
   }
 
-  async getAllPoductByUserForMouthAverage(id: string){
-     const result = await lastValueFrom(
-        this.clientOrder.send('product-average-mouth-by-user', id),
-      );
-      return result
-  }
-
-
-  async getUserMonth200(id : string){
+  async getAllPoductByUserForMouthAverage(id: string) {
     const result = await lastValueFrom(
-      this.clientOrder.send('user-200-mouth', id)
-    )
-    return result
+      this.clientOrder.send('product-average-mouth-by-user', id),
+    );
+    return result;
   }
 
-  async getMouthUserMuch200 (mes : string){
+  async getUserMonth200(id: string) {
     const result = await lastValueFrom(
-      this.clientOrder.send('mouth-user-200' , mes)
-    )
-    return result
+      this.clientOrder.send('user-200-mouth', id),
+    );
+    return result;
   }
 
-  async getProductMouthBestSeller(){
+  async getMouthUserMuch200(mes: string) {
     const result = await lastValueFrom(
-      this.clientOrder.send('product-best-seller-for-mouth' , {})
-    )
-    return result
+      this.clientOrder.send('mouth-user-200', mes),
+    );
+    return result;
   }
 
-  async getHistoryUser( id : string ){
-    return this.clientOrder.send('history-order' , id)
+  async getProductMouthBestSeller() {
+    const result = await lastValueFrom(
+      this.clientOrder.send('product-best-seller-for-mouth', {}),
+    );
+    return result;
+  }
+
+  async getHistoryUser(id: string) {
+    return this.clientOrder.send('history-order', id);
   }
 
   async getProductReconmedations(userId: string) {
