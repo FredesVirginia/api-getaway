@@ -4,6 +4,7 @@ import { OrderDto } from './dtos/Order-created.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { AddToCartDto } from './dtos/AddToCartItem.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -22,9 +23,9 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Post('add-to-cart')
-  addToCart(@Req() req) {
+  addToCart(@Req() req , @Body() data : AddToCartDto) {
       const user = req.user; 
-    return this.orderService.addToCart(user);
+    return this.orderService.addToCart(user , data);
   }
 
   @Get('by/user/total/:userId')

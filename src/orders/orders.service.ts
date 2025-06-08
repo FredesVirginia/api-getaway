@@ -9,6 +9,7 @@ import { OrderDto } from './dtos/Order-created.dto';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { ProductReconmedationDto } from 'src/products/dtos/ProductReconmedation.dto';
 import { ProductDtoForDecreaseQuantity } from 'src/products/dtos/ProductDto.dto';
+import { AddToCartDto } from './dtos/AddToCartItem.dto';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -57,9 +58,12 @@ export class OrdersService implements OnModuleInit {
   }
 
 
-  async addToCart(user : any){
-    return this.clientOrder.send('add-cart' , {user})
+  async addToCart(user : any , data : AddToCartDto){
+    console.log("DATA DE API GET AWAY" , data)
+    return this.clientOrder.send('add-cart' , {user , data})
   }
+
+  
 
   async getAllOrderTotalUser(id: string) {
     try {
