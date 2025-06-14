@@ -36,27 +36,11 @@ export class OrdersService implements OnModuleInit {
       }));
   }
 
-  async createOrder( user: any) {
-    //     {
-    //   "userId": "711ac41b-b89a-4228-a0af-cf04a70259ff",
-    //   "items": [
-    //     {
-    //       "productId": "8926e710-3b15-4184-a01e-19870b127922",
-    //       "quantity": 30,
-    //       "price": "200"
-    //     },
-
-    //       {
-    //       "productId": "82122a2b-802e-4cf3-8615-98f055a05d39",
-    //       "quantity": 60,
-    //       "price": "200"
-    //     }
-
-    //   ]
-    // }
+  async createOrder( user: any , nameCoupon? : string) {
+   
 
     const data1 = await this.userService.getCartItemUser(user);
-    console.log('DATA SERVICE', data1);
+    console.log('DATA SERVICE USER ', data1);
     const itemsOrder = data1.products.map((q)=>{
       return {
         productId : q.id,
@@ -77,6 +61,8 @@ export class OrdersService implements OnModuleInit {
       this.clientOrder.send('create-order', dataOrder),
     );
 
+    // TODO para disminiur stock en productos
+
     const data = dataResult.items.map((q) => {
       return {
         productId: q.productId,
@@ -89,6 +75,14 @@ export class OrdersService implements OnModuleInit {
       this.clientProduct.send('decrement-stock-product', dataSend),
     );
 
+    // TODO para borrar el carrito luego de  la compra
+    if(dataResult.items.length > 0){
+      console.log("BORRANDO CARITOS")
+    const resultCartDelete = await lastValueFrom( this.clientOrder.send('delete-cart-after-order', {user}))
+    console.log("LUGO DE HABER LLAMADO AL SERVICIO" , resultCartDelete)
+    }
+
+
     return dataResult;
   }
 
@@ -99,6 +93,10 @@ export class OrdersService implements OnModuleInit {
   async addToCart(user: any, data: AddToCartDto) {
     console.log('DATA DE API GET AWAY', data);
     return this.clientOrder.send('add-cart', { user, data });
+  }
+
+  async deleteCartAfterOrder (userId : string){
+    return this.clientOrder.send('delete-cart-after-order' , {userId})
   }
 
   async deleteCart(user: string, data: UpdateCartDto) {

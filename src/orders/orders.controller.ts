@@ -15,8 +15,13 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Post()
-  create( @Req() req) {
-    
+  create( @Req() req , @Body() body: { couponCode?: string }) {
+    if (body.couponCode && body.couponCode.trim() !== '') {
+  console.log("EXISTE")
+} else {
+ console.log("NO EXISTEE")
+}
+
     const userr = req.user.userId
     return this.orderService.createOrder( userr);
   }
