@@ -64,7 +64,7 @@ export class UsersService implements OnModuleInit {
    const dataProductMs = { products : dataProduct}
    const result = await lastValueFrom(this.clientProduct.send('product-details' , dataProductMs))
 
-    console.log( result)
+  
     return result
   }
   async getAllUser() {

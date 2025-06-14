@@ -9,12 +9,16 @@ import { OrderDto } from './dtos/Order-created.dto';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { ProductReconmedationDto } from 'src/products/dtos/ProductReconmedation.dto';
 import { ProductDtoForDecreaseQuantity } from 'src/products/dtos/ProductDto.dto';
-import { AddToCartDto } from './dtos/AddToCartItem.dto';
+import { AddToCartDto, UpdateCartDto } from './dtos/AddToCartItem.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
   private clientOrder: ClientProxy;
   private clientProduct: ClientProxy;
+
+  constructor(private readonly userService: UsersService) {}
+
   onModuleInit() {
     (this.clientOrder = ClientProxyFactory.create({
       transport: Transport.TCP,
@@ -32,9 +36,45 @@ export class OrdersService implements OnModuleInit {
       }));
   }
 
-  async createOrder(orderDto: OrderDto) {
+  async createOrder( user: any) {
+    //     {
+    //   "userId": "711ac41b-b89a-4228-a0af-cf04a70259ff",
+    //   "items": [
+    //     {
+    //       "productId": "8926e710-3b15-4184-a01e-19870b127922",
+    //       "quantity": 30,
+    //       "price": "200"
+    //     },
+
+    //       {
+    //       "productId": "82122a2b-802e-4cf3-8615-98f055a05d39",
+    //       "quantity": 60,
+    //       "price": "200"
+    //     }
+
+    //   ]
+    // }
+
+    const data1 = await this.userService.getCartItemUser(user);
+    console.log('DATA SERVICE', data1);
+    const itemsOrder = data1.products.map((q)=>{
+      return {
+        productId : q.id,
+        quantity : q.quantity,
+        price:q.price
+      }
+    })
+
+   
+    const dataOrder : OrderDto = {
+      userId : user, 
+      items: itemsOrder
+    }
+
+     console.log("DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT" , dataOrder)
+
     const dataResult = await lastValueFrom(
-      this.clientOrder.send('create-order', orderDto),
+      this.clientOrder.send('create-order', dataOrder),
     );
 
     const data = dataResult.items.map((q) => {
@@ -44,12 +84,11 @@ export class OrdersService implements OnModuleInit {
       };
     });
     const dataSend: ProductDtoForDecreaseQuantity = { products: data };
-    console.log('dataaaaaaaaa', dataSend);
 
     const dataResult2 = await lastValueFrom(
       this.clientProduct.send('decrement-stock-product', dataSend),
     );
-    console.log(dataResult2);
+
     return dataResult;
   }
 
@@ -57,13 +96,15 @@ export class OrdersService implements OnModuleInit {
     return this.clientOrder.send('order-by-user', id);
   }
 
-
-  async addToCart(user : any , data : AddToCartDto){
-    console.log("DATA DE API GET AWAY" , data)
-    return this.clientOrder.send('add-cart' , {user , data})
+  async addToCart(user: any, data: AddToCartDto) {
+    console.log('DATA DE API GET AWAY', data);
+    return this.clientOrder.send('add-cart', { user, data });
   }
 
-  
+  async deleteCart(user: string, data: UpdateCartDto) {
+    console.log('DATA SERVICE API GETAWAY', data);
+    return this.clientOrder.send('delete-product-cart', { user, data });
+  }
 
   async getAllOrderTotalUser(id: string) {
     try {
