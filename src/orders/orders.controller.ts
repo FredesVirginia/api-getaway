@@ -23,15 +23,20 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Post()
-  create(@Req() req, @Body() couponCode?: string) {
+  create(@Req() req,  @Body() body: { couponCode?: string }) {
+     const couponCode = body.couponCode;
     if (typeof couponCode === 'string' && couponCode.trim() !== '') {
-      console.log('EXISTE');
+      console.log('EXISTE' , couponCode);
+      const userr = req.user.userId;
+      return this.orderService.createOrder(userr , couponCode);
     } else {
-      console.log('NO EXISTEE');
+        console.log('NO EXISTEE' , couponCode) ;
+        const userr = req.user.userId;
+        return this.orderService.createOrder(userr);
+
     }
 
-    const userr = req.user.userId;
-    return this.orderService.createOrder(userr);
+   
   }
 
   //TODO GET ORDER para traer todas las ordenes

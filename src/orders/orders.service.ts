@@ -38,7 +38,7 @@ export class OrdersService implements OnModuleInit {
 
   async createOrder(user: any, nameCoupon?: string) {
     const data1 = await this.userService.getCartItemUser(user);
-    console.log('DATA SERVICE USER ', data1);
+    console.log('DATA SERVICE USER ', nameCoupon);
     const itemsOrder = data1.products.map((q) => {
       return {
         productId: q.id,
@@ -52,16 +52,25 @@ export class OrdersService implements OnModuleInit {
       items: itemsOrder,
     };
 
-    
-
-    const dataResult = await lastValueFrom(
-      this.clientOrder.send('create-order', dataOrder),
+    const coupon = await lastValueFrom(
+      this.clientOrder.send('look-for', nameCoupon),
     );
 
-    console.log('DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT', dataResult);
+    const couponId = coupon[0].discountPercent;
+    console.log("CUPONNNNNNNNNN" , coupon)
+    console.log('ENCONTRADO', couponId);
+    console.log('Payload a enviar al microservicio:', {
+      couponId,
+      orderDto: dataOrder,
+    });
+    const dataResult = await lastValueFrom(
+      this.clientOrder.send('create-order', {
+        couponId,
+        orderDto: dataOrder, // Cambié dataOrder por orderDto
+      }),
+    );
 
-
-    // TODO para disminiur stock en productos
+    // // TODO para disminiur stock en productos
 
     const data = dataResult.items.map((q) => {
       return {
@@ -83,6 +92,7 @@ export class OrdersService implements OnModuleInit {
     }
 
     return dataResult;
+   
   }
 
   async getAllOrdersByUser(id: string) {
