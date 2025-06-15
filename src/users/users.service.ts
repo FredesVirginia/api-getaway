@@ -10,12 +10,13 @@ import { lastValueFrom } from 'rxjs';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { isArray } from 'class-validator';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
   private clientUser: ClientProxy;
   private clientOrder: ClientProxy;
-  private clientProduct : ClientProxy;
+  private clientProduct: ClientProxy;
 
   onModuleInit() {
     (this.clientUser = ClientProxyFactory.create({
@@ -31,16 +32,14 @@ export class UsersService implements OnModuleInit {
           host: 'localhost',
           port: 3002,
         },
-      })) ,
-      
-       (this.clientProduct = ClientProxyFactory.create({
+      })),
+      (this.clientProduct = ClientProxyFactory.create({
         transport: Transport.TCP,
         options: {
           host: 'localhost',
           port: 3001,
         },
-      }))
-      ;
+      }));
   }
 
   async registerUser(data: AuthDto) {
@@ -52,20 +51,28 @@ export class UsersService implements OnModuleInit {
   }
 
   async getCartItemUser(user: string) {
-   
-    const dataOrderCartItem = await lastValueFrom(this.clientOrder.send('get-add-cart-user', { user }) )
-   
-    const dataProduct = dataOrderCartItem.map((q)=>{
-        return {
-            productId : q. productId,
-            quantity : q.quantity
-        }
-    })
-   const dataProductMs = { products : dataProduct}
-   const result = await lastValueFrom(this.clientProduct.send('product-details' , dataProductMs))
+    const dataOrderCartItem = await lastValueFrom(
+      this.clientOrder.send('get-add-cart-user', { user }),
+    );
 
-  
-    return result
+    
+
+    if (isArray(dataOrderCartItem) && dataOrderCartItem.length > 0) {
+      const dataProduct = dataOrderCartItem.map((q) => {
+        return {
+          productId: q.productId,
+          quantity: q.quantity,
+        };
+      });
+      const dataProductMs = { products: dataProduct };
+      const result = await lastValueFrom(
+        this.clientProduct.send('product-details', dataProductMs),
+      );
+
+      return result;
+    }
+
+    return []
   }
   async getAllUser() {
     return this.clientUser.send('get-all-u<ser', {});

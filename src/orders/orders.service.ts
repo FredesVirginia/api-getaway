@@ -36,30 +36,30 @@ export class OrdersService implements OnModuleInit {
       }));
   }
 
-  async createOrder( user: any , nameCoupon? : string) {
-   
-
+  async createOrder(user: any, nameCoupon?: string) {
     const data1 = await this.userService.getCartItemUser(user);
     console.log('DATA SERVICE USER ', data1);
-    const itemsOrder = data1.products.map((q)=>{
+    const itemsOrder = data1.products.map((q) => {
       return {
-        productId : q.id,
-        quantity : q.quantity,
-        price:q.price
-      }
-    })
+        productId: q.id,
+        quantity: q.quantity,
+        price: q.price,
+      };
+    });
 
-   
-    const dataOrder : OrderDto = {
-      userId : user, 
-      items: itemsOrder
-    }
+    const dataOrder: OrderDto = {
+      userId: user,
+      items: itemsOrder,
+    };
 
-     console.log("DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT" , dataOrder)
+    
 
     const dataResult = await lastValueFrom(
       this.clientOrder.send('create-order', dataOrder),
     );
+
+    console.log('DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT', dataResult);
+
 
     // TODO para disminiur stock en productos
 
@@ -76,12 +76,11 @@ export class OrdersService implements OnModuleInit {
     );
 
     // TODO para borrar el carrito luego de  la compra
-    if(dataResult.items.length > 0){
-      console.log("BORRANDO CARITOS")
-    const resultCartDelete = await lastValueFrom( this.clientOrder.send('delete-cart-after-order', {user}))
-    console.log("LUGO DE HABER LLAMADO AL SERVICIO" , resultCartDelete)
+    if (dataResult.items.length > 0) {
+      const resultCartDelete = await lastValueFrom(
+        this.clientOrder.send('delete-cart-after-order', { user }),
+      );
     }
-
 
     return dataResult;
   }
@@ -95,8 +94,8 @@ export class OrdersService implements OnModuleInit {
     return this.clientOrder.send('add-cart', { user, data });
   }
 
-  async deleteCartAfterOrder (userId : string){
-    return this.clientOrder.send('delete-cart-after-order' , {userId})
+  async deleteCartAfterOrder(userId: string) {
+    return this.clientOrder.send('delete-cart-after-order', { userId });
   }
 
   async deleteCart(user: string, data: UpdateCartDto) {
