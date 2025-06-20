@@ -26,7 +26,7 @@ export class OrdersController {
   create(@Req() req,  @Body() body: { couponCode?: string }) {
      const couponCode = body.couponCode;
     if (typeof couponCode === 'string' && couponCode.trim() !== '') {
-      console.log('EXISTE' , couponCode);
+     
       const userr = req.user.userId;
       return this.orderService.createOrder(userr , couponCode);
     } else {

@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   ClientProxy,
   ClientProxyFactory,
@@ -11,6 +16,11 @@ import { ProductReconmedationDto } from 'src/products/dtos/ProductReconmedation.
 import { ProductDtoForDecreaseQuantity } from 'src/products/dtos/ProductDto.dto';
 import { AddToCartDto, UpdateCartDto } from './dtos/AddToCartItem.dto';
 import { UsersService } from 'src/users/users.service';
+import {
+  cleanCartIfNeeded,
+  decreaseProductStock,
+  isCouponValid,
+} from './handlers/CallMsOrder';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -36,154 +46,159 @@ export class OrdersService implements OnModuleInit {
       }));
   }
 
-  async createOrder(user: any, nameCoupon?: string) {
-    const data1 = await this.userService.getCartItemUser(user);
-    console.log('DATA SERVICE USER ', nameCoupon);
+  // async createOrder(user: any, nameCoupon?: string) {
+  //   try {
+  //     const data1 = await this.userService.getCartItemUser(user);
+  //     console.log('DATA SERVICE USER ', nameCoupon);
 
-    const itemsOrder = data1.products.map((q) => {
-      return {
+  //     const itemsOrder = data1.products.map((q) => {
+  //       return {
+  //         productId: q.id,
+  //         quantity: q.quantity,
+  //         price: q.price,
+  //       };
+  //     });
+
+  //     const dataOrder: OrderDto = {
+  //       userId: user,
+  //       items: itemsOrder,
+  //     };
+
+  //     if (typeof nameCoupon === 'string' && nameCoupon.trim() !== '') {
+  //       const coupon = await lastValueFrom(
+  //         this.clientOrder.send('look-for', nameCoupon),
+  //       );
+
+  //       const couponId = coupon[0].discountPercent;
+  //       console.log('CUPONNNNNNNNNN', coupon);
+
+  //       const couponDate = Array.isArray(couponId) ? couponId[0] : couponId;
+  //       const now = new Date();
+  //       const fechaSolo = new Date(
+  //         now.getFullYear(),
+  //         now.getMonth(),
+  //         now.getDate(),
+  //       );
+  //       const validFrom = new Date(couponDate.validFrom);
+  //       const validUntil = new Date(couponDate.validUntil);
+
+  //       if(fechaSolo >= validFrom && fechaSolo <= validUntil){
+  //         const dataResult = await lastValueFrom(
+  //         this.clientOrder.send('create-order', {
+  //           coupon,
+  //           orderDto: dataOrder, // Cambié dataOrder por orderDto
+  //         }),
+  //       );
+
+  //       const data = dataResult.items.map((q) => {
+  //         return {
+  //           productId: q.productId,
+  //           quantity: q.quantity,
+  //         };
+  //       });
+  //       const dataSend: ProductDtoForDecreaseQuantity = { products: data };
+
+  //       const dataResult2 = await lastValueFrom(
+  //         this.clientProduct.send('decrement-stock-product', dataSend),
+  //       );
+
+  //       // TODO para borrar el carrito luego de  la compra
+  //       if (dataResult.items.length > 0) {
+  //         const resultCartDelete = await lastValueFrom(
+  //           this.clientOrder.send('delete-cart-after-order', { user }),
+  //         );
+  //       }
+
+  //       return dataResult;
+  //       }else{
+  //         throw new  BadRequestException({
+  //           message: "Cupon No valido"
+  //         })
+  //       }
+  //     } else {
+  //       const dataResult = await lastValueFrom(
+  //         this.clientOrder.send('create-order', {
+  //           orderDto: dataOrder, // Cambié dataOrder por orderDto
+  //         }),
+  //       );
+  //       console.log("MICROOOOOOOOOO" , dataResult)
+
+  //       const data = dataResult.items.map((q) => {
+  //         return {
+  //           productId: q.productId,
+  //           quantity: q.quantity,
+  //         };
+  //       });
+  //       const dataSend: ProductDtoForDecreaseQuantity = { products: data };
+
+  //       const dataResult2 = await lastValueFrom(
+  //         this.clientProduct.send('decrement-stock-product', dataSend),
+  //       );
+
+  //       // TODO para borrar el carrito luego de  la compra
+  //       if (dataResult.items.length > 0) {
+  //         const resultCartDelete = await lastValueFrom(
+  //           this.clientOrder.send('delete-cart-after-order', { user }),
+  //         );
+  //       }
+
+  //       return dataResult;
+  //     }
+  //   } catch (error) {
+  //     console.log('POR EL CATCH' , error);
+  //      // error puede tener estructura { status: 'error', message: 'Cupon no valido' }
+  // const message = error?.message || 'Error en el cupón';
+  // throw new BadRequestException(message);
+  //   }
+  // }
+
+  async createOrder(user: any, nameCoupon?: string) {
+    try {
+      const cartData = await this.userService.getCartItemUser(user);
+
+      const itemsOrder = cartData.products.map((q) => ({
         productId: q.id,
         quantity: q.quantity,
         price: q.price,
+      }));
+
+      const orderDto: OrderDto = {
+        userId: user,
+        items: itemsOrder,
       };
-    });
 
-    const dataOrder: OrderDto = {
-      userId: user,
-      items: itemsOrder,
-    };
+      let coupon: any = null;
 
-    if (typeof nameCoupon === 'string' && nameCoupon.trim() !== '') {
-      const coupon = await lastValueFrom(
-        this.clientOrder.send('look-for', nameCoupon),
-      );
+      if (typeof nameCoupon === 'string' && nameCoupon.trim() !== '') {
+        const fetchedCoupon = await lastValueFrom(
+          this.clientOrder.send('look-for', nameCoupon),
+        );
+        coupon = Array.isArray(fetchedCoupon)
+          ? fetchedCoupon[0]
+          : fetchedCoupon;
 
-      const couponId = coupon[0].discountPercent;
-      console.log('CUPONNNNNNNNNN', coupon);
-      console.log('ENCONTRADO', couponId);
-      console.log('Payload a enviar al microservicio:', {
-       coupon,
-        orderDto: dataOrder,
-      });
+        if (!isCouponValid(coupon)) {
+          throw new BadRequestException({ message: 'Cupón no válido' });
+        }
+      }
+
       const dataResult = await lastValueFrom(
         this.clientOrder.send('create-order', {
-         coupon,
-          orderDto: dataOrder, // Cambié dataOrder por orderDto
+          orderDto,
+          ...(coupon && { coupon }),
         }),
       );
 
-      const data = dataResult.items.map((q) => {
-        return {
-          productId: q.productId,
-          quantity: q.quantity,
-        };
-      });
-      const dataSend: ProductDtoForDecreaseQuantity = { products: data };
-
-      const dataResult2 = await lastValueFrom(
-        this.clientProduct.send('decrement-stock-product', dataSend),
-      );
-
-      // TODO para borrar el carrito luego de  la compra
-      if (dataResult.items.length > 0) {
-        const resultCartDelete = await lastValueFrom(
-          this.clientOrder.send('delete-cart-after-order', { user }),
-        );
-      }
+      await decreaseProductStock(dataResult.items, this.clientProduct);
+      await cleanCartIfNeeded(dataResult.items, user, this.clientOrder);
 
       return dataResult;
-     
-    } else {
-      const dataResult = await lastValueFrom(
-        this.clientOrder.send('create-order', {
-          orderDto: dataOrder, // Cambié dataOrder por orderDto
-        }),
-      );
-
-      const data = dataResult.items.map((q) => {
-        return {
-          productId: q.productId,
-          quantity: q.quantity,
-        };
-      });
-      const dataSend: ProductDtoForDecreaseQuantity = { products: data };
-
-      const dataResult2 = await lastValueFrom(
-        this.clientProduct.send('decrement-stock-product', dataSend),
-      );
-
-      // TODO para borrar el carrito luego de  la compra
-      if (dataResult.items.length > 0) {
-        const resultCartDelete = await lastValueFrom(
-          this.clientOrder.send('delete-cart-after-order', { user }),
-        );
-      }
-
-      return dataResult;
+    } catch (error) {
+      console.error('Error al crear la orden:', error);
+      const message = error?.message || 'Error en el proceso de la orden';
+      throw new BadRequestException(message);
     }
   }
-
-  //   async createOrder(user: any, nameCoupon?: string) {
-  //   const data1 = await this.userService.getCartItemUser(user);
-  //   console.log('DATA SERVICE USER ', nameCoupon);
-
-  //   const itemsOrder = data1.products.map((q) => ({
-  //     productId: q.id,
-  //     quantity: q.quantity,
-  //     price: q.price,
-  //   }));
-
-  //   const dataOrder: OrderDto = {
-  //     userId: user,
-  //     items: itemsOrder,
-  //   };
-
-  //   let couponId: number | null = null;
-
-  //   if (typeof nameCoupon === 'string' && nameCoupon.trim() !== '') {
-  //     const coupon = await lastValueFrom(
-  //       this.clientOrder.send('look-for', nameCoupon));
-
-  //     if (coupon && Array.isArray(coupon) && coupon.length > 0) {
-  //       couponId = coupon[0].discountPercent;
-  //       console.log('CUPÓN ENCONTRADO:wwwwwwwwwwwwwwwwwwwwwwwwwwww', coupon);
-  //     } else {
-  //       console.log('Cupón no encontrado o inválido');
-  //       // Opcional: lanzar error o continuar sin cupón
-  //       // throw new BadRequestException('Cupón inválido');
-  //     }
-  //   }
-
-  //   // Construimos el payload para enviar al microservicio
-  //   const payload = couponId !== null
-  //     ? { couponId, orderDto: dataOrder }
-  //     : { orderDto: dataOrder };
-
-  //   const dataResult = await lastValueFrom(
-  //     this.clientOrder.send('create-order', payload),
-  //   );
-
-  //   // Procesar decremento de stock
-  //   const data = dataResult.items.map((q) => ({
-  //     productId: q.productId,
-  //     quantity: q.quantity,
-  //   }));
-
-  //   const dataSend: ProductDtoForDecreaseQuantity = { products: data };
-
-  //   await lastValueFrom(
-  //     this.clientProduct.send('decrement-stock-product', dataSend),
-  //   );
-
-  //   // Borrar carrito si hay items
-  //   if (dataResult.items.length > 0) {
-  //     await lastValueFrom(
-  //       this.clientOrder.send('delete-cart-after-order', { user }),
-  //     );
-  //   }
-
-  //   return dataResult;
-  // }
 
   async getAllOrdersByUser(id: string) {
     return this.clientOrder.send('order-by-user', id);
