@@ -201,6 +201,7 @@ export class OrdersService implements OnModuleInit {
   }
 
   async getAllOrdersByUser(id: string) {
+    console.log("AQUIIIIIIIIIIIIIIIIIIIIIIIIIII")
     return this.clientOrder.send('order-by-user', id);
   }
 

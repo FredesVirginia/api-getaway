@@ -42,6 +42,11 @@ export class OrdersController {
   //TODO GET ORDER para traer todas las ordenes
   @Get('by/user/:userId')
   getAllOrderUser(@Param('userId') userId: string) {
+    return this.orderService.getAllOrdersByUser(userId);
+  }
+
+   @Get('by/user/recomendations/:userId')
+  getProductRecomentationUser(@Param('userId') userId: string) {
     return this.orderService.getProductReconmedations(userId);
   }
 
